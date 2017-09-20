@@ -9,6 +9,16 @@ from keras.utils import plot_model
 import matplotlib.pyplot as plt
 
 
+class TimeHistory(keras.callbacks.Callback):
+    def on_train_begin(self, logs={}):
+        self.times = []
+
+    def on_epoch_begin(self, batch, logs={}):
+        self.epoch_time_start = time.time()
+
+    def on_epoch_end(self, batch, logs={}):
+        self.times.append(time.time() - self.epoch_time_start)
+
 class MNISTCNN(object):
     def __init__(self, batch_size, num_classes, epochs):
         super(MNISTCNN, self).__init__()
@@ -67,12 +77,13 @@ class MNISTCNN(object):
         self.model = model
         return self.model
 
-    def fit_model(self):
+    def fit_model(self, callbacks=[]):
         train_history = self.model.fit(self.x_train, self.y_train,
                   batch_size=self.batch_size,
                   epochs=self.epochs,
                   verbose=1,
-                  validation_data=(self.x_test, self.y_test))
+                  validation_data=(self.x_test, self.y_test),
+                  callbacks=callbacks)
 
         return train_history
 
@@ -81,8 +92,8 @@ class MNISTCNN(object):
         print('Test loss:', score[0])
         print('Test accuracy:', score[1])
 
-    def run(self):
-        train_history = self.fit_model()
+    def run(self, callbacks=[]):
+        train_history = self.fit_model(callbacks=callbacks)
         self.evaluate_model()
 
         return train_history
@@ -124,10 +135,19 @@ def plot_history(history_cnn, history_cnn_dsc):
     plt.legend(['cnn_loss', 'cnn_val_loss', 'dsc_cnn_loss', 'dsc_cnn_val_loss'])
 
     plt.savefig('mnist_cnn_dsc_loss.png')
-    plt.show()
+    # plt.show()
+
+def plot_time(times_cnn, times_cnn_dsc):
+    plt.plot(times_cnn)
+    plt.plot(times_cnn_dsc)
+
+    plt.savefig('mnist_cnn_dsc_time.png')
 
 
 def main():
+    time_callback_cnn = TimeHistory()
+    time_callback_cnn_dsc = TimeHistory()
+
     mnist_cnn_dsc = MNISTCNNDSC(128, 10, 12)
     mnist_cnn_dsc.model.summary()
     plot_model(mnist_cnn_dsc.model, to_file='mnist_cnn_dsc.png', show_shapes=True)
@@ -140,7 +160,6 @@ def main():
     train_history_cnn_dsc = mnist_cnn_dsc.run()
 
     plot_history(train_history_cnn, train_history_cnn_dsc)
-
 
 
 
