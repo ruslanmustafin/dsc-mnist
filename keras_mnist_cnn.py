@@ -139,6 +139,7 @@ def main():
     train_history_cnn = mnist_cnn.run()
     train_history_cnn_dsc = mnist_cnn_dsc.run()
 
+    plot_history(train_history_cnn, train_history_cnn_dsc)
 
 
 
